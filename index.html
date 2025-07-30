@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en" class="future">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Institute of Marine Sciences | Digital Fish Archive</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    /* Custom CSS Variables for Theming */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-accent: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-accent: #0891b2;
+      --border-color: #e2e8f0;
+      --header-gradient-start: #0e7490;
+      --header-gradient-end: #164e63;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --glow-color: rgba(8, 145, 178, 0);
+    }
+    html.dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-accent: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-accent: #22d3ee;
+      --border-color: #334155;
+      --header-gradient-start: #1e293b;
+      --header-gradient-end: #0f172a;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --glow-color: rgba(34, 211, 238, 0);
+    }
+    html.ocean {
+      --bg-primary: #f0f9ff;
+      --bg-secondary: #ffffff;
+      --bg-accent: #e0f2fe;
+      --text-primary: #0c4a6e;
+      --text-secondary: #38bdf8;
+      --text-accent: #0ea5e9;
+      --border-color: #bae6fd;
+      --header-gradient-start: #0ea5e9;
+      --header-gradient-end: #0284c7;
+      --shadow-color: rgba(14, 165, 233, 0.1);
+      --glow-color: rgba(14, 165, 233, 0);
+    }
+    html.future {
+      --bg-primary: #010413;
+      --bg-secondary: rgba(10, 23, 58, 0.1);
+      --bg-accent: rgba(0, 246, 255, 0.1);
+      --text-primary: #e0f2fe;
+      --text-secondary: #7dd3fc;
+      --text-accent: #00f6ff;
+      --border-color: rgba(0, 246, 255, 0.2);
+      --header-gradient-start: #010413;
+      --header-gradient-end: #0c1a4d;
+      --shadow-color: rgba(0, 246, 255, 0.1);
+      --glow-color: rgba(0, 246, 255, 0.5);
+    }
+    html.bioluminescent {
+      --bg-primary: #020a1a;
+      --bg-secondary: rgba(15, 23, 42, 0.5);
+      --bg-accent: rgba(56, 189, 248, 0.1);
+      --text-primary: #e0f2fe;
+      --text-secondary: #67e8f9;
+      --text-accent: #22d3ee;
+      --border-color: rgba(56, 189, 248, 0.2);
+      --header-gradient-start: #020a1a;
+      --header-gradient-end: #082f49;
+      --shadow-color: rgba(34, 211, 238, 0.1);
+      --glow-color: rgba(34, 211, 238, 0.4);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.5s, color 0.5s;
+    }
+    
+    #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    .glass-effect {
+        background-color: var(--bg-secondary);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 30px var(--shadow-color);
+    }
+    
+    .page-content, .fish-card, #greeting-message {
+        opacity: 0;
+        animation: fadeIn 0.8s forwards;
+    }
+
+    .fish-card {
+        transform-style: preserve-3d;
+        transition: transform 0.4s, box-shadow 0.4s;
+    }
+
+    .fish-card:hover {
+        transform: perspective(1000px) rotateY(5deg) rotateX(2deg) scale(1.02);
+        border-color: var(--text-accent);
+        box-shadow: 0 0 25px var(--glow-color);
+    }
+    
+    @keyframes fadeIn {
+        to { opacity: 1; }
+    }
+    
+    #detailsModal.hidden, .page.hidden, #app-container.hidden, #page-loader-overlay.hidden, #quick-ask-modal.hidden, #ai-notification.hidden { display: none; }
+    
+    #detailsModal, #quick-ask-modal {
+        transition: opacity 0.3s;
+    }
+
+    #modalContent, #quick-ask-content {
+        animation: zoomIn 0.4s forwards;
+    }
+
+    @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    
+    .nav-link.active {
+        color: var(--text-accent);
+        text-shadow: 0 0 8px var(--glow-color);
+    }
+    
+    .rating-stars svg {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .rating-stars svg:hover {
+        color: var(--text-accent);
+    }
+    
+    .loader {
+        width: 50px;
+        aspect-ratio: 1;
+        display: grid;
+        animation: l14 4s infinite;
+    }
+    .loader::before,
+    .loader::after {
+        content: "";
+        grid-area: 1/1;
+        border: 8px solid;
+        border-radius: 50%;
+        border-color: var(--text-accent) var(--text-accent) #0000 #0000;
+        mix-blend-mode: darken;
+        animation: l14 1s infinite linear;
+    }
+    .loader::after {
+        border-color: #0000 #0000 var(--text-secondary) var(--text-secondary);
+        animation-direction: reverse;
+    }
+    @keyframes l14 {
+        100% { transform: rotate(1turn) }
+    }
+
+    /* Splash Screen Styles */
+    #splash-screen {
+        transition: opacity 0.8s ease-out;
+    }
+    #enter-btn {
+        border: 2px solid var(--text-accent);
+        box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px rgba(0, 246, 255, 0.3);
+        animation: pulse-glow 3s infinite;
+    }
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px rgba(0, 246, 255, 0.3); }
+        50% { box-shadow: 0 0 25px var(--glow-color), inset 0 0 15px rgba(0, 246, 255, 0.5); }
+    }
+
+    /* AI Chat Styles */
+    #chat-container {
+        height: calc(100vh - 420px);
+        max-height: 550px;
+    }
+    .chat-message {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.5s forwards;
+    }
+    @keyframes slideInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .chat-message.user {
+        background-color: var(--bg-accent);
+        border-color: var(--border-color);
+    }
+    .chat-message.model {
+        background-color: transparent;
+    }
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: var(--text-secondary);
+        border-radius: 50%;
+        display: inline-block;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-of-type(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-of-type(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1.0); }
+    }
+    
+    /* Click Animation */
+    @keyframes button-press {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+    .clicked {
+      animation: button-press 0.2s ease-in-out;
+    }
+
+    /* Page Loader Overlay */
+    #page-loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(1, 4, 19, 0.6);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s;
+    }
+    
+    /* Search Spinner */
+    .search-spinner {
+        display: none;
+        width: 24px;
+        height: 24px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--text-accent);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    .search-spinner.active {
+        display: block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* AI Notification Pop-up */
+    #ai-notification {
+      position: fixed;
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4000;
+      transition: bottom 0.5s ease-in-out;
+    }
+    #ai-notification.visible {
+      bottom: 20px;
+    }
+
+    @media print {
+      .no-print { display: none; }
+      #fishGrid > div { page-break-inside: avoid; box-shadow: none; border: 1px solid #e5e7eb; }
+      #fishGrid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+  </style>
+</head>
+<body class="bg-[var(--bg-primary)] text-[var(--text-primary)]">
+  <canvas id="bg-canvas"></canvas>
+
+  <div id="page-loader-overlay" class="hidden">
+      <div class="loader"></div>
+  </div>
+
+  <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="text-center">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-wider">Institute of Marine Sciences</h1>
+        <p class="text-xl md:text-2xl text-[var(--text-accent)] mt-2">Digital Fish Archive</p>
+        <button id="enter-btn" class="mt-12 px-10 py-4 text-2xl font-semibold text-[var(--text-accent)] bg-black/20 rounded-lg transition-all hover:bg-[var(--text-accent)] hover:text-black hover:scale-105">
+            ENTER
+        </button>
+    </div>
+  </div>
+
+  <div id="app-container" class="hidden">
+    <header class="bg-gradient-to-r from-[var(--header-gradient-start)] to-[var(--header-gradient-end)] text-white shadow-lg no-print relative z-10">
+      <div class="container mx-auto px-4 sm:px-6 py-4 md:py-6 text-center">
+        <div class="flex justify-center items-center gap-4 mb-2">
+          <img src="https://www.udsm.ac.tz/storage/images/logo/1699596929.png" alt="UDSM Logo" class="h-16 w-16 object-contain" onerror="this.style.display='none'">
+          <img src="https://placehold.co/64x64/ffffff/164e63?text=IMS" alt="Tuna Fish Icon" class="h-16 w-16 object-contain rounded-full" onerror="this.onerror=null;this.src='https://placehold.co/64x64/ffffff/164e63?text=IMS';">
+        </div>
+        <h1 class="text-2xl md:text-4xl font-bold tracking-tight">University of Dar es Salaam</h1>
+        <h2 class="text-lg md:text-2xl font-light opacity-90">Institute of Marine Sciences</h2>
+        <p class="mt-2 text-md md:text-lg font-semibold text-[var(--text-accent)]">Fish Species and Their Local Names</p>
+        <p class="text-sm opacity-80 mt-1">Curated by RAMADHANI Y NDANGE</p>
+        <nav class="mt-4 md:mt-6 flex justify-center gap-2 sm:gap-6 text-base md:text-lg">
+          <a href="#/home" class="nav-link text-[var(--text-secondary)] hover:text-[var(--text-accent)] transition-colors px-2 sm:px-3 py-1 rounded-md">Database</a>
+          <a href="#/ai" class="nav-link text-[var(--text-secondary)] hover:text-[var(--text-accent)] transition-colors px-2 sm:px-3 py-1 rounded-md">AI Assistant</a>
+          <a href="#/about" class="nav-link text-[var(--text-secondary)] hover:text-[var(--text-accent)] transition-colors px-2 sm:px-3 py-1 rounded-md">About</a>
+          <a href="#/contact" class="nav-link text-[var(--text-secondary)] hover:text-[var(--text-accent)] transition-colors px-2 sm:px-3 py-1 rounded-md">Contact</a>
+          <a href="#/feedback" class="nav-link text-[var(--text-secondary)] hover:text-[var(--text-accent)] transition-colors px-2 sm:px-3 py-1 rounded-md">Feedback</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 md:px-6 py-8 relative z-10">
+      
+      <p id="greeting-message" class="text-center text-base md:text-lg text-[var(--text-secondary)] mb-8"></p>
+      
+      <div id="page-home" class="page">
+        <div id="controls-container" class="sticky top-0 z-40 py-4 bg-transparent no-print transition-shadow duration-300">
+            <section id="controls" class="controls p-4 rounded-xl glass-effect">
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div class="relative w-full md:w-auto md:flex-1">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-secondary)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+                        <input type="text" id="searchInput" placeholder="Search 2,000 species..." class="w-full pl-11 pr-10 py-2.5 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--text-accent)] focus:border-[var(--text-accent)] transition-all text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]">
+                        <div id="search-spinner" class="search-spinner absolute right-3 top-1/2 -translate-y-1/2"></div>
+                    </div>
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button id="customizeBtn" class="flex items-center gap-2 px-3 py-2 md:px-4 text-sm md:text-base bg-[var(--bg-accent)] text-[var(--text-accent)] font-semibold rounded-lg hover:opacity-80 transition-opacity border border-[var(--border-color)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span class="hidden sm:inline">Customize</span>
+                        </button>
+                        <button id="exportBtn" class="flex items-center gap-2 px-3 py-2 md:px-4 text-sm md:text-base bg-[var(--text-accent)] text-black font-semibold rounded-lg hover:opacity-80 transition-opacity">Export</button>
+                        <button id="printBtn" class="flex items-center gap-2 px-3 py-2 md:px-4 text-sm md:text-base bg-[var(--text-secondary)] text-white font-semibold rounded-lg hover:opacity-80 transition-opacity">Print</button>
+                    </div>
+                </div>
+                <div id="customizePanel" class="hidden mt-4 pt-4 border-t border-[var(--border-color)]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label for="themeSelector" class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Theme</label>
+                            <select id="themeSelector" class="w-full p-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)]">
+                                <option value="bioluminescent">Bioluminescent</option>
+                                <option value="future">Future</option>
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                                <option value="ocean">Ocean Blue</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="layoutSelector" class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Layout</label>
+                            <select id="layoutSelector" class="w-full p-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)]">
+                                <option value="grid">Grid View</option>
+                                <option value="list">List View</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="itemsPerPageSelector" class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Items per Page</label>
+                            <select id="itemsPerPageSelector" class="w-full p-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)]">
+                                <option value="12">12</option>
+                                <option value="24">24</option>
+                                <option value="48">48</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div id="fishGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <div id="noResults" class="hidden text-center py-16"><h3 class="text-2xl font-semibold">No Matching Species Found</h3></div>
+        <div id="loading" class="flex flex-col items-center justify-center text-center py-16">
+          <div class="loader"></div>
+          <h3 class="text-2xl font-semibold text-[var(--text-accent)] mt-4">Loading Holo-Database...</h3>
+        </div>
+        <div id="paginationControls" class="hidden mt-12 flex justify-center items-center gap-4 no-print">
+          <button id="prevBtn" class="px-4 py-2 glass-effect font-semibold rounded-lg hover:bg-[var(--bg-accent)] disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+          <span id="pageIndicator" class="font-medium"></span>
+          <button id="nextBtn" class="px-4 py-2 glass-effect font-semibold rounded-lg hover:bg-[var(--bg-accent)] disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+        </div>
+      </div>
+
+      <div id="page-ai" class="page hidden">
+        <div class="page-content glass-effect rounded-xl p-4 md:p-6 flex flex-col">
+            <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-accent)] mb-4 text-center">AI Marine Assistant</h2>
+            <div id="chat-container" class="flex-grow overflow-y-auto p-4 space-y-6 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                <!-- Chat messages will be appended here -->
+            </div>
+            <div id="ai-input-container" class="mt-4 pt-4 border-t border-[var(--border-color)]">
+                <div class="relative">
+                    <textarea id="ai-input" placeholder="Ask about marine life, oceanography, or a specific fish..." rows="2" class="w-full p-3 pr-28 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--text-accent)] focus:border-[var(--text-accent)] transition-all text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none"></textarea>
+                    <button id="ai-send-btn" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-[var(--text-accent)] text-black font-semibold rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.949a.75.75 0 00.95.539l4.95-1.414a.75.75 0 00-.54-1.402L3.105 2.29zM4.949 11.414a.75.75 0 00-.54 1.402l4.95 1.414a.75.75 0 00.95-.539l1.414-4.949a.75.75 0 00-1.402-.54l-4.949 1.414zM11.95 9.45a.75.75 0 00.54-1.402L7.54 6.636a.75.75 0 00-.95.539L5.176 12.12a.75.75 0 001.402.54l1.414-4.949z"/></svg>
+                        <span>Send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div id="page-about" class="page hidden">
+        <div class="page-content glass-effect rounded-xl p-6 md:p-8">
+          <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-accent)] mb-4">About This Project</h2>
+          <p class="text-base md:text-lg mb-4">This digital archive is a comprehensive catalog of fish species found in the marine waters of Tanzania, compiled by the Institute of Marine Sciences at the University of Dar es Salaam.</p>
+          <p class="mb-4">Our mission is to provide an accessible, detailed resource for students, researchers, and enthusiasts alike. The database includes scientific classifications, local Swahili names, habitat information, and conservation status for hundreds of species, fostering a deeper understanding and appreciation for Tanzania's rich marine biodiversity.</p>
+          <p>The project was curated and this interface brought to life by RAMADHANI Y NDANGE.</p>
+        </div>
+      </div>
+
+      <div id="page-contact" class="page hidden">
+        <div class="page-content glass-effect rounded-xl p-6 md:p-8">
+          <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-accent)] mb-4">Contact Information</h2>
+          <div class="space-y-4 text-base md:text-lg">
+            <p><strong>Curator:</strong> RAMADHANI Y NDANGE</p>
+            <p><strong>Phone:</strong> <a href="tel:+255765183217" class="underline hover:text-[var(--text-accent)]">+255 765 183 217</a></p>
+            <p><strong>Email:</strong> <a href="mailto:ramadhanindange1@gmail.com" class="underline hover:text-[var(--text-accent)]">ramadhanindange1@gmail.com</a></p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="page-feedback" class="page hidden">
+          <div class="page-content glass-effect rounded-xl p-6 md:p-8">
+              <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-accent)] mb-4">Feedback & Ratings</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                  <div id="feedback-summary" class="md:col-span-1 glass-effect rounded-lg p-6 flex flex-col items-center justify-center">
+                      <p class="text-lg text-[var(--text-secondary)]">Average Rating</p>
+                      <p id="average-rating" class="text-5xl font-bold text-[var(--text-accent)]">0.0</p>
+                      <div id="average-stars" class="flex text-2xl text-yellow-400"></div>
+                      <p id="ratings-count" class="text-sm text-[var(--text-secondary)] mt-2">(0 ratings)</p>
+                  </div>
+                  <form id="feedback-form" class="md:col-span-2 space-y-4">
+                      <div>
+                          <label for="rating" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">Your Rating</label>
+                          <div id="rating-input" class="rating-stars flex text-3xl text-gray-500" data-rating="0">
+                              <svg data-value="1" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                              <svg data-value="2" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                              <svg data-value="3" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                              <svg data-value="4" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                              <svg data-value="5" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                          </div>
+                      </div>
+                      <div>
+                          <label for="comment-text" class="block text-sm font-medium text-[var(--text-secondary)]">Your Comment</label>
+                          <textarea id="comment-text" rows="4" class="mt-1 w-full p-2.5 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--text-accent)] focus:border-[var(--text-accent)] transition-all text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]" placeholder="Share your thoughts..."></textarea>
+                      </div>
+                      <div class="flex justify-end">
+                          <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-[var(--text-accent)] text-black font-semibold rounded-lg hover:opacity-80 transition-opacity">Submit Feedback</button>
+                      </div>
+                  </form>
+              </div>
+              <div id="comments-list" class="space-y-6">
+                  <p class="text-center text-[var(--text-secondary)]">Loading comments...</p>
+              </div>
+          </div>
+      </div>
+
+    </main>
+
+    <div id="detailsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden no-print opacity-0">
+      <div id="modalContent" class="modal-content glass-effect rounded-2xl shadow-2xl w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
+          <div class="p-4 border-b border-[var(--border-color)] flex justify-between items-center flex-shrink-0">
+              <h2 id="modalTitle" class="text-2xl font-bold text-[var(--text-accent)]">Species Details</h2>
+              <button id="closeModalBtn" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+          </div>
+          <div id="modalBody" class="p-4 sm:p-6 overflow-y-auto">
+            <!-- Modal content will be populated here -->
+          </div>
+      </div>
+    </div>
+
+    <button id="quick-ask-fab" class="fixed bottom-6 right-6 bg-[var(--text-accent)] text-black rounded-full p-4 shadow-lg hover:scale-110 transition-transform z-50">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    </button>
+
+    <div id="quick-ask-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[5000] hidden opacity-0">
+        <div id="quick-ask-content" class="glass-effect rounded-2xl shadow-2xl w-11/12 max-w-lg flex flex-col">
+            <div class="p-4 border-b border-[var(--border-color)] flex justify-between items-center">
+                <h2 class="text-xl font-bold text-[var(--text-accent)]">Quick Ask</h2>
+                <button id="close-quick-ask-btn" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div id="quick-ask-response" class="min-h-[100px] bg-[var(--bg-primary)] p-3 rounded-lg border border-[var(--border-color)] overflow-y-auto max-h-64">
+                    <p class="text-[var(--text-secondary)]">Ask a question to get an instant answer...</p>
+                </div>
+                <div class="relative">
+                    <input type="text" id="quick-ask-input" placeholder="e.g., What is the largest fish?" class="w-full p-3 pr-24 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--text-accent)] text-[var(--text-primary)]">
+                    <button id="quick-ask-send-btn" class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-[var(--text-accent)] text-black font-semibold rounded-md">Ask</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ai-notification" class="hidden">
+        <div class="glass-effect rounded-lg p-4 flex items-center gap-4 cursor-pointer shadow-2xl">
+            <div class="text-[var(--text-accent)]">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <p class="font-semibold text-[var(--text-primary)]">Have a question?</p>
+                <p class="text-sm text-[var(--text-secondary)]">Click here to ask our AI assistant.</p>
+            </div>
+            <button id="close-ai-notification-btn" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] ml-4">&times;</button>
+        </div>
+    </div>
+
+    <footer class="footer mt-16 bg-transparent border-t border-[var(--border-color)] text-[var(--text-secondary)] text-center py-8 no-print relative z-10">
+      <div class="container mx-auto px-6">
+        <p>&copy; 2025 Institute of Marine Sciences, University of Dar es Salaam. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module">
+    // --- Firebase SDK Imports ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- CONFIGURATION ---
+    // PASTE YOUR GOOGLE AI GEMINI API KEY HERE
+    const GEMINI_API_KEY = "AIzaSyB8hjXVQ7ri0qYXFyOX53Nssd9IGP-9Z_0"; 
+
+    // --- GLOBAL STATE & DATA ---
+    let allFishData = [];
+    let currentPage = 1;
+    let rowsPerPage = 12;
+    let filteredData = [];
+    let currentLayout = 'grid';
+    let currentTheme = 'bioluminescent';
+    let db, auth; 
+    let aiChatHistory = [];
+    let notificationShown = false;
+
+    // --- DOM ELEMENTS ---
+    const dom = {
+        splashScreen: document.getElementById('splash-screen'),
+        enterBtn: document.getElementById('enter-btn'),
+        appContainer: document.getElementById('app-container'),
+        bgCanvas: document.getElementById('bg-canvas'),
+        grid: document.getElementById('fishGrid'),
+        searchInput: document.getElementById('searchInput'),
+        searchSpinner: document.getElementById('search-spinner'),
+        pageIndicator: document.getElementById('pageIndicator'),
+        prevBtn: document.getElementById('prevBtn'),
+        nextBtn: document.getElementById('nextBtn'),
+        noResults: document.getElementById('noResults'),
+        paginationControls: document.getElementById('paginationControls'),
+        loading: document.getElementById('loading'),
+        modal: document.getElementById('detailsModal'),
+        modalContent: document.getElementById('modalContent'),
+        modalBody: document.getElementById('modalBody'),
+        modalTitle: document.getElementById('modalTitle'),
+        closeModalBtn: document.getElementById('closeModalBtn'),
+        customizeBtn: document.getElementById('customizeBtn'),
+        customizePanel: document.getElementById('customizePanel'),
+        themeSelector: document.getElementById('themeSelector'),
+        layoutSelector: document.getElementById('layoutSelector'),
+        itemsPerPageSelector: document.getElementById('itemsPerPageSelector'),
+        controlsContainer: document.getElementById('controls-container'),
+        pageLoaderOverlay: document.getElementById('page-loader-overlay'),
+        quickAskFab: document.getElementById('quick-ask-fab'),
+        quickAskModal: document.getElementById('quick-ask-modal'),
+        closeQuickAskBtn: document.getElementById('close-quick-ask-btn'),
+        quickAskInput: document.getElementById('quick-ask-input'),
+        quickAskSendBtn: document.getElementById('quick-ask-send-btn'),
+        quickAskResponse: document.getElementById('quick-ask-response'),
+        aiNotification: document.getElementById('ai-notification'),
+        closeAiNotificationBtn: document.getElementById('close-ai-notification-btn'),
+        pages: {
+            home: document.getElementById('page-home'),
+            ai: document.getElementById('page-ai'),
+            about: document.getElementById('page-about'),
+            contact: document.getElementById('page-contact'),
+            feedback: document.getElementById('page-feedback')
+        },
+        navLinks: document.querySelectorAll('.nav-link'),
+        feedbackForm: document.getElementById('feedback-form'),
+        ratingInput: document.getElementById('rating-input'),
+        commentText: document.getElementById('comment-text'),
+        commentsList: document.getElementById('comments-list'),
+        averageRating: document.getElementById('average-rating'),
+        averageStars: document.getElementById('average-stars'),
+        ratingsCount: document.getElementById('ratings-count'),
+        greetingMessage: document.getElementById('greeting-message'),
+        chatContainer: document.getElementById('chat-container'),
+        aiInput: document.getElementById('ai-input'),
+        aiSendBtn: document.getElementById('ai-send-btn'),
+    };
+    
+    // --- UTILITY FUNCTIONS ---
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // --- ANIMATED BACKGROUND ---
+    function runAnimatedBackground() {
+        if (!dom.bgCanvas) return;
+        const ctx = dom.bgCanvas.getContext('2d');
+        let stars = [];
+        let width, height;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            dom.bgCanvas.width = width;
+            dom.bgCanvas.height = height;
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    vx: Math.random() * 0.2 - 0.1,
+                    vy: Math.random() * 0.2 - 0.1
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.1)';
+            stars.forEach(star => {
+                star.x += star.vx;
+                star.y += star.vy;
+                if (star.x < 0 || star.x > width) star.vx = -star.vx;
+                if (star.y < 0 || star.y > height) star.vy = -star.vy;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    }
+
+
+    // --- ROUTING & LOADERS ---
+    function showPageLoader(show) {
+        if (show) {
+            dom.pageLoaderOverlay.classList.remove('hidden');
+        } else {
+            dom.pageLoaderOverlay.classList.add('hidden');
+        }
+    }
+    
+    function handleRouteChange() {
+        showPageLoader(true);
+        const hash = window.location.hash || '#/home';
+        const route = hash.substring(2);
+
+        Object.values(dom.pages).forEach(page => page && page.classList.add('hidden'));
+        const targetPage = dom.pages[route] || dom.pages.home;
+        if (targetPage) {
+            targetPage.classList.remove('hidden');
+            if (route === 'ai') {
+                initializeAIChat();
+            }
+        }
+
+        dom.navLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === hash);
+        });
+
+        setTimeout(() => showPageLoader(false), 300);
+    }
+    
+    // --- FIREBASE ---
+    async function initializeFirebase() {
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        if (!firebaseConfigStr) {
+            console.error("Firebase config not found. Feedback feature will be disabled.");
+            if(dom.pages.feedback) dom.pages.feedback.innerHTML = `<div class="text-center text-red-400">Feedback service is currently unavailable.</div>`;
+            return;
+        }
+
+        try {
+            const firebaseConfig = JSON.parse(firebaseConfigStr);
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            if (authToken) {
+                await signInWithCustomToken(auth, authToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+            
+            const feedbackCollection = collection(db, `/artifacts/${appId}/public/data/feedback`);
+            const q = query(feedbackCollection);
+
+            onSnapshot(q, (snapshot) => {
+                const feedback = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                feedback.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                renderFeedback(feedback);
+            });
+
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            if(dom.pages.feedback) dom.pages.feedback.innerHTML = `<div class="text-center text-red-400">Error connecting to feedback service.</div>`;
+        }
+    }
+
+    function renderFeedback(feedback) {
+        if (!dom.commentsList) return;
+        if (feedback.length === 0) {
+            dom.commentsList.innerHTML = '<p class="text-center text-[var(--text-secondary)]">No comments yet. Be the first to leave feedback!</p>';
+            dom.averageRating.textContent = '0.0';
+            dom.ratingsCount.textContent = '(0 ratings)';
+            dom.averageStars.innerHTML = '';
+            return;
+        }
+
+        const ratings = feedback.map(f => f.rating).filter(r => r > 0);
+        const totalRatings = ratings.length;
+        const average = totalRatings > 0 ? (ratings.reduce((a, b) => a + b, 0) / totalRatings) : 0;
+        
+        dom.averageRating.textContent = average.toFixed(1);
+        dom.ratingsCount.textContent = `(${totalRatings} ratings)`;
+        dom.averageStars.innerHTML = getStarsHTML(average, 'text-yellow-400');
+
+        dom.commentsList.innerHTML = feedback.map(item => {
+            const date = item.timestamp ? item.timestamp.toDate().toLocaleString() : 'Just now';
+            return `
+                <div class="glass-effect p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center text-yellow-400">${getStarsHTML(item.rating)}</div>
+                        <span class="text-xs text-[var(--text-secondary)]">${date}</span>
+                    </div>
+                    <p class="mt-3 text-[var(--text-primary)]">${item.comment}</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getStarsHTML(rating, colorClass = '') {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            const fill = i <= rating ? 'currentColor' : 'none';
+            const stroke = i <= rating ? 'none' : 'currentColor';
+            html += `<svg class="w-5 h-5 ${colorClass}" fill="${fill}" stroke="${stroke}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.867 5.742a1 1 0 00.95.69h6.008c.969 0 1.371 1.24.588 1.81l-4.865 3.53a1 1 0 00-.364 1.118l1.867 5.742c.3.921-.755 1.688-1.54 1.118l-4.865-3.53a1 1 0 00-1.175 0l-4.865 3.53c-.784.57-1.838-.197-1.539-1.118l1.867-5.742a1 1 0 00-.364-1.118L2.49 11.17c-.783-.57-.38-1.81.588-1.81h6.008a1 1 0 00.95-.69L11.049 2.927z" /></svg>`;
+        }
+        return html;
+    }
+
+    async function handleFeedbackSubmit(e) {
+        e.preventDefault();
+        const rating = parseInt(dom.ratingInput.dataset.rating);
+        const comment = dom.commentText.value.trim();
+
+        if (rating === 0 && comment === '') {
+            alert("Please provide a rating or a comment.");
+            return;
+        }
+        
+        const feedbackData = {
+            rating: rating,
+            comment: comment,
+            timestamp: serverTimestamp(),
+            userId: auth.currentUser.uid,
+        };
+
+        try {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            await addDoc(collection(db, `/artifacts/${appId}/public/data/feedback`), feedbackData);
+            
+            dom.commentText.value = '';
+            dom.ratingInput.dataset.rating = 0;
+            updateStarDisplay(0);
+
+        } catch (error) {
+            console.error("Error adding feedback: ", error);
+            alert("Sorry, there was an error submitting your feedback.");
+        }
+    }
+
+    function updateStarDisplay(rating) {
+        if (!dom.ratingInput) return;
+        const stars = dom.ratingInput.querySelectorAll('svg');
+        stars.forEach(star => {
+            const starValue = parseInt(star.dataset.value);
+            star.classList.toggle('text-yellow-400', starValue <= rating);
+            star.classList.toggle('text-gray-500', starValue > rating);
+        });
+    }
+
+    // --- AI FEATURES ---
+    function updateAIFeatureStatus() {
+        const isKeyAvailable = !!GEMINI_API_KEY;
+        
+        if (dom.aiInput) {
+            dom.aiInput.disabled = !isKeyAvailable;
+            dom.aiSendBtn.disabled = !isKeyAvailable;
+            dom.aiInput.placeholder = isKeyAvailable 
+                ? "Ask about marine life, or request an image..."
+                : "AI Assistant is offline. API key not configured.";
+        }
+        if (dom.quickAskInput) {
+            dom.quickAskInput.disabled = !isKeyAvailable;
+            dom.quickAskSendBtn.disabled = !isKeyAvailable;
+            dom.quickAskFab.style.display = isKeyAvailable ? 'block' : 'none';
+        }
+    }
+
+    function initializeAIChat() {
+        if (aiChatHistory.length > 0) return; 
+
+        if (!GEMINI_API_KEY) {
+            const apiKeyMessage = `**AI Assistant is offline.** A Google AI Gemini API key has not been configured in the code.`;
+            aiChatHistory = [{ role: 'model', parts: [{ text: apiKeyMessage }] }];
+        } else {
+             const systemPrompt = `You are the AI Assistant for the Institute of Marine Sciences' Digital Fish Archive in Tanzania. Your purpose is to answer questions about marine biology, oceanography, and local fish species. When asked for a picture, you must provide links to Google Images and FishBase, not generate an image. Be helpful, accurate, and engaging. The current time is Wednesday, July 30, 2025 at 6:31 AM EAT.`;
+
+            aiChatHistory = [
+                { role: "user", parts: [{ text: systemPrompt }] },
+                { role: "model", parts: [{ text: "Understood. I am the AI Marine Assistant. I can answer your questions and provide links to real images of marine life. How can I help you today?" }] }
+            ];
+        }
+        renderAIChat();
+    }
+
+    function renderAIChat() {
+        if (!dom.chatContainer) return;
+        const messagesToRender = aiChatHistory[0]?.role === 'user' ? aiChatHistory.slice(1) : aiChatHistory;
+        dom.chatContainer.innerHTML = messagesToRender.map(entry => createChatMessage('text', entry.role, entry.parts[0].text)).join('');
+        scrollToChatBottom();
+    }
+
+    function createChatMessage(type, role, content) {
+        const alignClass = role === 'user' ? 'justify-end' : 'justify-start';
+        const bubbleClass = role === 'user' ? 'bg-[var(--bg-accent)] rounded-br-none' : 'bg-[var(--bg-secondary)] rounded-bl-none';
+        
+        let contentHtml = `<div class="prose prose-sm md:prose-base text-[var(--text-primary)] max-w-none">${marked.parse(content)}</div>`;
+        
+        return `
+            <div class="chat-message flex ${alignClass}">
+                <div class="max-w-xl lg:max-w-2xl px-4 py-3 rounded-xl shadow-md ${bubbleClass}">
+                    ${contentHtml}
+                </div>
+            </div>
+        `;
+    }
+    
+    function showTypingIndicator(container) {
+        if (container.querySelector('.typing-indicator-wrapper')) return;
+        const indicatorHTML = `
+            <div class="typing-indicator-wrapper chat-message flex justify-start">
+                <div class="max-w-xl lg:max-w-2xl px-4 py-3 rounded-xl shadow-md bg-[var(--bg-secondary)] rounded-bl-none">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', indicatorHTML);
+        if (container === dom.chatContainer) scrollToChatBottom();
+    }
+
+    function removeTypingIndicator(container) {
+        const indicator = container.querySelector('.typing-indicator-wrapper');
+        if (indicator) indicator.remove();
+    }
+
+    function scrollToChatBottom() {
+        if(dom.chatContainer) dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+    }
+
+    async function handleAIChatSubmit() {
+        const userInput = dom.aiInput.value.trim();
+        if (userInput === '' || !GEMINI_API_KEY) return;
+
+        dom.aiInput.value = '';
+        dom.aiSendBtn.disabled = true;
+
+        aiChatHistory.push({ role: 'user', parts: [{ text: userInput }] });
+        dom.chatContainer.insertAdjacentHTML('beforeend', createChatMessage('text', 'user', userInput));
+        scrollToChatBottom();
+        
+        showTypingIndicator(dom.chatContainer);
+
+        const isImageRequest = /^(show|generate|create|make).*(picture|image|photo|drawing)/i.test(userInput);
+
+        try {
+            let modelResponse;
+            if (isImageRequest) {
+                const query = userInput.replace(/^(show|generate|create|make).*(picture|image|photo|drawing) of/i, '').trim();
+                const lowerCaseQuery = query.toLowerCase();
+                const fish = allFishData.find(f => 
+                    f.englishName.toLowerCase().includes(lowerCaseQuery) ||
+                    (f.swahiliName && f.swahiliName.toLowerCase().includes(lowerCaseQuery)) ||
+                    f.scientificName.toLowerCase().includes(lowerCaseQuery)
+                );
+
+                if (fish) {
+                    const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(fish.scientificName)}`;
+                    const fishbaseUrl = `https://www.fishbase.se/summary/${fish.scientificName.replace(/ /g, '-')}.html`;
+                    modelResponse = `Of course! Here are some links to find accurate images and data for the **${fish.englishName}**:
+
+* [View images on Google](${googleImagesUrl})
+* [See data on FishBase](${fishbaseUrl})`;
+                } else {
+                    const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`;
+                    modelResponse = `I couldn't find "${query}" in our local database, but here are some general links for your search:
+
+* [View images on Google](${googleImagesUrl})
+* You can also try searching on [FishBase](https://www.fishbase.se).`;
+                }
+            } else {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+                const payload = { contents: aiChatHistory };
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${response.status} ${response.statusText}. ${errorData.error?.message}`);
+                }
+                const result = await response.json();
+                modelResponse = result.candidates[0].content.parts[0].text;
+            }
+            
+            aiChatHistory.push({ role: 'model', parts: [{ text: modelResponse }] });
+            removeTypingIndicator(dom.chatContainer);
+            dom.chatContainer.insertAdjacentHTML('beforeend', createChatMessage('text', 'model', modelResponse));
+
+        } catch (error) {
+            console.error("AI Chat Error:", error);
+            const errorMessage = "My apologies, but I'm having trouble connecting to my neural network right now. This could be due to an invalid API key or a network issue. Please try again.";
+            removeTypingIndicator(dom.chatContainer);
+            dom.chatContainer.insertAdjacentHTML('beforeend', createChatMessage('text', 'model', errorMessage));
+        } finally {
+            dom.aiSendBtn.disabled = false;
+            dom.aiInput.focus();
+            scrollToChatBottom();
+        }
+    }
+
+    async function handleQuickAsk() {
+        const userInput = dom.quickAskInput.value.trim();
+        if (userInput === '' || !GEMINI_API_KEY) return;
+
+        dom.quickAskResponse.innerHTML = `<div class="flex justify-center items-center h-full"><div class="loader"></div></div>`;
+        
+        try {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const payload = { contents: [{ role: "user", parts: [{ text: userInput }] }] };
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error("API request failed");
+            const result = await response.json();
+            const modelResponse = result.candidates[0].content.parts[0].text;
+            dom.quickAskResponse.innerHTML = marked.parse(modelResponse);
+        } catch (error) {
+            console.error("Quick Ask Error:", error);
+            dom.quickAskResponse.innerHTML = `<p class="text-red-400">Sorry, I couldn't get an answer. Please try again.</p>`;
+        }
+    }
+
+    // --- FISH DATABASE FUNCTIONS ---
+    function createFishCardGrid(fish) {
+      const hasDetails = !!fish.classification;
+      return `
+        <div class="fish-card glass-effect rounded-xl overflow-hidden flex flex-col cursor-pointer" data-id="${fish.id}">
+          <div class="relative">
+            <img src="https://placehold.co/400x300/010413/00f6ff?text=${encodeURIComponent(fish.englishName)}" alt="${fish.englishName}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/e2e8f0/94a3b8?text=Image+Not+Found';">
+            ${hasDetails ? '<span class="absolute top-2 right-2 bg-[var(--text-accent)] text-black text-xs font-bold px-2 py-1 rounded-full">REAL DATA</span>' : ''}
+          </div>
+          <div class="p-5 flex-grow flex flex-col">
+            <h3 class="text-lg font-bold text-[var(--text-accent)]">${fish.englishName}</h3>
+            <p class="text-[var(--text-secondary)] text-sm mt-1 flex-grow"><em>${fish.scientificName}</em></p>
+            <span class="mt-4 text-sm font-semibold text-[var(--text-accent)] self-start">View Details &rarr;</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    function createFishCardList(fish) {
+        const hasDetails = !!fish.classification;
+        return `
+            <div class="fish-card glass-effect rounded-xl hover:border-[var(--text-accent)] transition-all duration-300 flex items-center cursor-pointer p-4" data-id="${fish.id}">
+                <img src="https://placehold.co/100x75/010413/00f6ff?text=${encodeURIComponent(fish.englishName[0])}" alt="${fish.englishName}" class="w-16 h-16 object-cover rounded-lg mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x75/e2e8f0/94a3b8?text=N/A';">
+                <div class="flex-grow">
+                    <h3 class="font-bold text-[var(--text-accent)]">${fish.englishName}</h3>
+                    <p class="text-sm text-[var(--text-secondary)]"><em>${fish.scientificName}</em></p>
+                </div>
+                ${hasDetails ? '<span class="text-xs font-bold text-black bg-[var(--text-accent)] px-2 py-1 rounded-full mr-4">REAL DATA</span>' : ''}
+                <span class="text-sm font-semibold text-[var(--text-accent)] hidden sm:inline">View &rarr;</span>
+            </div>
+        `;
+    }
+
+    function renderGrid() {
+      if (!dom.grid) return;
+      dom.loading.classList.add('hidden');
+      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+      
+      if (filteredData.length === 0) {
+        dom.grid.innerHTML = '';
+        dom.grid.classList.add('hidden');
+        dom.noResults.classList.remove('hidden');
+        dom.paginationControls.classList.add('hidden');
+        return;
+      }
+      
+      dom.grid.classList.remove('hidden');
+      dom.noResults.classList.add('hidden');
+      dom.paginationControls.classList.remove('hidden');
+      
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      
+      const cardRenderer = currentLayout === 'grid' ? createFishCardGrid : createFishCardList;
+      dom.grid.innerHTML = filteredData.slice(start, end).map(cardRenderer).join('');
+
+      const cards = dom.grid.querySelectorAll('.fish-card');
+      cards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 50}ms`;
+      });
+
+      updatePaginationControls();
+    }
+
+    function updatePaginationControls() {
+      if(!dom.pageIndicator) return;
+      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+      dom.pageIndicator.textContent = `Page ${currentPage} of ${totalPages > 0 ? totalPages : 1}`;
+      dom.prevBtn.disabled = currentPage === 1;
+      dom.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+    }
+
+    function handleSearch() {
+        dom.searchSpinner.classList.add('active');
+        
+        setTimeout(() => {
+            const searchTerm = dom.searchInput.value.toLowerCase().trim();
+            filteredData = allFishData.filter(fish => 
+                fish.englishName.toLowerCase().includes(searchTerm) ||
+                (fish.swahiliName && fish.swahiliName.toLowerCase().includes(searchTerm)) ||
+                fish.scientificName.toLowerCase().includes(searchTerm)
+            );
+            currentPage = 1;
+            renderGrid();
+            dom.searchSpinner.classList.remove('active');
+        }, 500);
+    }
+
+    function openModal(fishId) {
+        const fish = allFishData.find(f => f.id === parseInt(fishId));
+        if (!fish) return;
+
+        dom.modal.classList.remove('hidden');
+        dom.modalBody.innerHTML = `<div class="flex justify-center items-center p-8"><div class="loader"></div></div>`;
+        dom.modalTitle.textContent = "Loading Details...";
+
+        setTimeout(() => {
+            dom.modalTitle.textContent = fish.englishName;
+
+            const modalHtml = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="flex flex-col items-center justify-center w-full h-auto space-y-4">
+                        <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(fish.scientificName)}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-full px-4 py-3 bg-[var(--bg-accent)] rounded-lg text-[var(--text-primary)] font-semibold hover:opacity-80 transition-opacity border-2 border-dashed border-[var(--border-color)]">
+                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <span>View Images on Google</span>
+                        </a>
+                        <a href="https://www.fishbase.se/summary/${fish.scientificName.replace(/ /g, '-')}.html" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-full px-4 py-3 bg-cyan-50/10 rounded-lg text-cyan-200 font-semibold hover:bg-cyan-100/20 transition-colors border-2 border-dashed border-cyan-200/30">
+                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>View on FishBase</span>
+                        </a>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-[var(--text-secondary)] border-b border-[var(--border-color)] pb-1 mb-2">Designations</h3>
+                            <p><strong class="font-medium w-28 inline-block">Common:</strong> ${fish.englishName}</p>
+                            <p><strong class="font-medium w-28 inline-block">Local (Swahili):</strong> ${fish.swahiliName || 'N/A'}</p>
+                            <p><strong class="font-medium w-28 inline-block">Scientific:</strong> <em>${fish.scientificName}</em></p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-[var(--text-secondary)] border-b border-[var(--border-color)] pb-1 mb-2">Vitals</h3>
+                            <p><strong class="font-medium w-28 inline-block">Max Size:</strong> ${fish.maxSize || 'Data not available'}</p>
+                            <p><strong class="font-medium w-28 inline-block">Habitat:</strong> ${fish.habitat || 'Data not available'}</p>
+                            <p><strong class="font-medium w-28 inline-block">Diet:</strong> ${fish.diet || 'Data not available'}</p>
+                            <p><strong class="font-medium w-28 inline-block">Status:</strong> ${fish.conservationStatus || 'Data not available'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-[var(--text-secondary)] border-b border-[var(--border-color)] pb-1 mb-2">Description</h3>
+                    <p class="text-sm">${fish.description || 'Description not available.'}</p>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-[var(--text-secondary)] border-b border-[var(--border-color)] pb-1 mb-2">Taxonomic Classification</h3>
+                    <div class="text-sm bg-[var(--bg-accent)] p-4 rounded-lg border border-[var(--border-color)] grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        ${fish.classification ? Object.entries(fish.classification).map(([key, value]) => `<p><strong class="font-medium capitalize text-[var(--text-secondary)]">${key}:</strong> ${value}</p>`).join('') : '<p>Classification data not available.</p>'}
+                    </div>
+                </div>
+            `;
+            dom.modalBody.innerHTML = modalHtml;
+        }, 400);
+    }
+
+    function closeModal() {
+        dom.modal.classList.add('opacity-0');
+        setTimeout(() => {
+            dom.modal.classList.add('hidden');
+            dom.modal.classList.remove('opacity-0');
+        }, 300);
+    }
+
+    function exportToCSV() {
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const dataToExport = filteredData.slice(start, end);
+
+        if (dataToExport.length === 0) {
+            alert("No data on the current page to export.");
+            return;
+        }
+
+        const headers = ['ID', 'English Name', 'Swahili Name', 'Scientific Name', 'Habitat', 'Diet', 'Max Size', 'Conservation Status', 'Description'];
+        let csvContent = headers.join(',') + '\n';
+        dataToExport.forEach(fish => {
+            const row = [
+                fish.id,
+                `"${(fish.englishName || '').replace(/"/g, '""')}"`,
+                `"${(fish.swahiliName || 'N/A').replace(/"/g, '""')}"`,
+                `"${(fish.scientificName || '').replace(/"/g, '""')}"`,
+                `"${(fish.habitat || 'N/A').replace(/"/g, '""')}"`,
+                `"${(fish.diet || 'N/A').replace(/"/g, '""')}"`,
+                `"${(fish.maxSize || 'N/A').replace(/"/g, '""')}"`,
+                `"${(fish.conservationStatus || 'N/A').replace(/"/g, '""')}"`,
+                `"${(fish.description || '').replace(/"/g, '""')}"`
+            ].join(',');
+            csvContent += row + '\n';
+        });
+        const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `fish_species_page_${currentPage}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // --- UI & CUSTOMIZATION ---
+    function setGreeting() {
+        if (!dom.greetingMessage) return;
+        const hour = new Date().getHours();
+        let greeting;
+        if (hour < 12) {
+            greeting = "Good morning";
+        } else if (hour < 18) {
+            greeting = "Good afternoon";
+        } else {
+            greeting = "Good evening";
+        }
+        dom.greetingMessage.textContent = `${greeting}, and welcome to the Institute of Marine Sciences digital archive.`;
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.className = theme;
+        currentTheme = theme;
+        localStorage.setItem('fishCatalogTheme', theme);
+    }
+
+    function applyLayout(layout) {
+        if (!dom.grid) return;
+        if (layout === 'list') {
+            dom.grid.className = 'grid grid-cols-1 gap-4';
+        } else { // grid
+            dom.grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+        }
+        currentLayout = layout;
+        localStorage.setItem('fishCatalogLayout', layout);
+        renderGrid();
+    }
+
+    function applyItemsPerPage(count) {
+        rowsPerPage = parseInt(count, 10);
+        currentPage = 1;
+        localStorage.setItem('fishCatalogItemsPerPage', count);
+        renderGrid();
+    }
+    
+    function loadPreferences() {
+        const theme = localStorage.getItem('fishCatalogTheme') || 'bioluminescent';
+        const layout = localStorage.getItem('fishCatalogLayout') || 'grid';
+        const items = localStorage.getItem('fishCatalogItemsPerPage') || '12';
+        
+        if(dom.themeSelector) dom.themeSelector.value = theme;
+        if(dom.layoutSelector) dom.layoutSelector.value = layout;
+        if(dom.itemsPerPageSelector) dom.itemsPerPageSelector.value = items;
+
+        applyTheme(theme);
+        applyLayout(layout);
+        applyItemsPerPage(items);
+        
+        updateAIFeatureStatus();
+    }
+
+    // --- INITIALIZATION ---
+    async function initializeFishData() {
+        try {
+            const response = await fetch('fish_data.json');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            
+            allFishData = data.map(fish => ({
+              ...fish,
+              maxSize: fish.maxSize || 'N/A',
+              habitat: fish.habitat || 'N/A',
+              diet: fish.diet || 'N/A',
+              conservationStatus: fish.conservationStatus || 'N/A',
+              description: fish.description || 'No description available.',
+            }));
+            
+            const startingId = allFishData.length + 1;
+            for (let i = startingId; i <= 2000; i++) {
+                const num = i.toString().padStart(4, '0');
+                const scientificName = `Exemplar scientificum ${num}`;
+                const englishName = `Placeholder Species ${num}`;
+                allFishData.push({ id: i, englishName: englishName, swahiliName: `Samaki ${num}`, scientificName: scientificName });
+            }
+
+            filteredData = [...allFishData];
+            renderGrid();
+        } catch (error) {
+            if(dom.loading) dom.loading.innerHTML = `<h3 class="text-2xl font-semibold text-red-500">Holonet Connection Lost</h3><p class="text-gray-400 mt-2">${error.message}</p>`;
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    
+    function handleCardClick(e) {
+        e.preventDefault();
+        const card = e.target.closest('.fish-card');
+        if (card) {
+            openModal(card.dataset.id);
+        }
+    }
+
+    window.addEventListener('hashchange', handleRouteChange);
+    window.addEventListener('DOMContentLoaded', () => {
+        runAnimatedBackground();
+        loadPreferences();
+        setGreeting();
+        initializeFishData();
+        initializeFirebase();
+        handleRouteChange();
+    });
+
+    if(dom.enterBtn) {
+        dom.enterBtn.addEventListener('click', () => {
+            dom.splashScreen.style.opacity = '0';
+            dom.appContainer.classList.remove('hidden');
+            dom.appContainer.style.animation = 'fadeIn 1s forwards';
+            setTimeout(() => {
+                dom.splashScreen.style.display = 'none';
+                if (GEMINI_API_KEY && !notificationShown) {
+                    setTimeout(() => {
+                        dom.aiNotification.classList.remove('hidden');
+                        dom.aiNotification.classList.add('visible');
+                        notificationShown = true;
+                    }, 10000);
+                }
+            }, 800);
+        });
+    }
+
+    if(dom.searchInput) dom.searchInput.addEventListener('input', debounce(handleSearch, 400));
+    if(dom.prevBtn) dom.prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderGrid(); window.scrollTo(0, 0); } });
+    if(dom.nextBtn) dom.nextBtn.addEventListener('click', () => { const totalPages = Math.ceil(filteredData.length / rowsPerPage); if (currentPage < totalPages) { currentPage++; renderGrid(); window.scrollTo(0, 0); } });
+    
+    if(dom.grid) {
+        dom.grid.addEventListener('click', handleCardClick);
+        dom.grid.addEventListener('touchend', handleCardClick);
+    }
+    
+    if(dom.closeModalBtn) dom.closeModalBtn.addEventListener('click', closeModal);
+    if(dom.modal) dom.modal.addEventListener('click', (e) => {
+        if (e.target.id === 'detailsModal') { closeModal(); }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && !dom.modal.classList.contains('hidden')) { closeModal(); }
+    });
+    
+    if(dom.customizeBtn) dom.customizeBtn.addEventListener('click', () => { dom.customizePanel.classList.toggle('hidden'); });
+    if(dom.themeSelector) dom.themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+    if(dom.layoutSelector) dom.layoutSelector.addEventListener('change', (e) => applyLayout(e.target.value));
+    if(dom.itemsPerPageSelector) dom.itemsPerPageSelector.addEventListener('change', (e) => applyItemsPerPage(e.target.value));
+    
+    if(dom.feedbackForm) dom.feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+    if(dom.ratingInput) dom.ratingInput.addEventListener('click', (e) => {
+        const star = e.target.closest('svg');
+        if (star) {
+            const rating = star.dataset.value;
+            dom.ratingInput.dataset.rating = rating;
+            updateStarDisplay(rating);
+        }
+    });
+
+    if(dom.exportBtn) dom.exportBtn.addEventListener('click', exportToCSV);
+    if(dom.printBtn) dom.printBtn.addEventListener('click', () => { window.print(); });
+    
+    // AI Listeners
+    if(dom.aiSendBtn) dom.aiSendBtn.addEventListener('click', handleAIChatSubmit);
+    if(dom.aiInput) dom.aiInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleAIChatSubmit();
+        }
+    });
+
+    if(dom.quickAskFab) dom.quickAskFab.addEventListener('click', () => {
+        dom.quickAskModal.classList.remove('hidden');
+        dom.quickAskModal.style.opacity = '1';
+    });
+    if(dom.closeQuickAskBtn) dom.closeQuickAskBtn.addEventListener('click', () => {
+        dom.quickAskModal.style.opacity = '0';
+        setTimeout(() => dom.quickAskModal.classList.add('hidden'), 300);
+    });
+    if(dom.quickAskSendBtn) dom.quickAskSendBtn.addEventListener('click', handleQuickAsk);
+    if(dom.quickAskInput) dom.quickAskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleQuickAsk();
+    });
+    
+    if(dom.aiNotification) dom.aiNotification.addEventListener('click', (e) => {
+        if (e.target.closest('button')) {
+            dom.aiNotification.classList.remove('visible');
+        } else {
+            dom.aiNotification.classList.remove('visible');
+            dom.quickAskModal.classList.remove('hidden');
+            dom.quickAskModal.style.opacity = '1';
+        }
+    });
+
+    // Global click animation listener
+    document.body.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a.nav-link, .fish-card');
+        if (target) {
+            target.classList.add('clicked');
+            target.addEventListener('animationend', () => {
+                target.classList.remove('clicked');
+            }, { once: true });
+        }
+    });
+
+  </script>
+</body>
+</html>
